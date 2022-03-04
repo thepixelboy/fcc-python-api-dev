@@ -1,3 +1,4 @@
+from random import randrange
 from typing import Optional
 
 from fastapi import FastAPI
@@ -31,4 +32,7 @@ def get_posts():
 
 @app.post("/posts")
 def create_posts(post: Post):
-    return {"data": post}
+    post_dict = post.dict()
+    post_dict["id"] = randrange(0, 1000000)
+    my_posts.append(post_dict)
+    return {"data": post_dict}
