@@ -26,6 +26,12 @@ def find_post(id):
             return p
 
 
+def find_index_post(id):
+    for i, p in enumerate(my_posts):
+        if p["id"] == id:
+            return i
+
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to my API"}
@@ -54,3 +60,17 @@ def get_post(id: int, response: Response):
         )
 
     return {"post_detail": post}
+
+
+@app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_post(id: int):
+    index = find_index_post(id)
+
+    if not index:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"post with id {id} not found",
+        )
+
+    my_posts.pop(index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
