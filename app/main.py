@@ -4,9 +4,13 @@ from typing import Optional
 
 import psycopg2
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Response, status
+from fastapi import Depends, FastAPI, HTTPException, Response, status
 from psycopg2.extras import RealDictCursor
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from . import models
+from .database import engine, get_db
 
 load_dotenv()
 
@@ -15,6 +19,8 @@ db_port = os.environ.get("DB_PORT")
 db_name = os.environ.get("DB_NAME")
 db_user = os.environ.get("DB_USER")
 db_pass = os.environ.get("DB_PASS")
+
+models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
@@ -67,6 +73,11 @@ def find_index_post(id):
 @app.get("/")
 async def root():
     return {"message": "Welcome to my API"}
+
+
+@app.get("/sqlalchemy")
+def test_posts(db: Session = Depends(get_db)):
+    return {"status": "success"}
 
 
 @app.get("/posts")
