@@ -5,10 +5,9 @@ import psycopg2
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Response, status
 from psycopg2.extras import RealDictCursor
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from . import models
+from . import models, schemas
 from .database import engine, get_db
 
 load_dotenv()
@@ -23,12 +22,6 @@ models.Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
-
-
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
 
 while True:
@@ -73,12 +66,6 @@ async def root():
     return {"message": "Welcome to my API"}
 
 
-@app.get("/sqlalchemy")
-def test_posts(db: Session = Depends(get_db)):
-    posts = db.query(models.Post).all()
-    return {"data": posts}
-
-
 @app.get("/posts")
 def get_posts(db: Session = Depends(get_db)):
     posts = db.query(models.Post).all()
@@ -86,7 +73,7 @@ def get_posts(db: Session = Depends(get_db)):
 
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_posts(post: Post, db: Session = Depends(get_db)):
+def create_posts(post: schemas.CreatePost, db: Session = Depends(get_db)):
     new_post = models.Post(**post.dict())
     db.add(new_post)
     db.commit()
@@ -125,7 +112,9 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
 
 @app.put("/posts/{id}", status_code=status.HTTP_202_ACCEPTED)
-def update_post(id: int, post: Post, db: Session = Depends(get_db)):
+def update_post(
+    id: int, post: schemas.CreatePost, db: Session = Depends(get_db)
+):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post_to_update = post_query.first()
 
