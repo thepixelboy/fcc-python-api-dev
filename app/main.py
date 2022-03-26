@@ -5,6 +5,7 @@ from typing import List
 import psycopg2
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, Response, status
+from passlib.context import CryptContext
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
 
@@ -18,6 +19,8 @@ db_port = os.environ.get("DB_PORT")
 db_name = os.environ.get("DB_NAME")
 db_user = os.environ.get("DB_USER")
 db_pass = os.environ.get("DB_PASS")
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -141,6 +144,10 @@ def update_post(
     "/users", status_code=status.HTTP_201_CREATED, response_model=schemas.User
 )
 def create_user(user: schemas.CreateUser, db: Session = Depends(get_db)):
+    # hash the password - user.password
+    hashed_password = pwd_context.hash(user.password)
+    user.password = hashed_password
+
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
