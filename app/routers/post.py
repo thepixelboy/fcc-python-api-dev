@@ -24,7 +24,7 @@ def get_posts(
 def create_posts(
     post: schemas.CreatePost,
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user),
+    current_user: int = Depends(oauth2.get_current_user),
 ):
     new_post = models.Post(**post.dict())
     db.add(new_post)
@@ -39,7 +39,7 @@ def get_post(
     id: int,
     response: Response,
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user),
+    current_user: int = Depends(oauth2.get_current_user),
 ):
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
@@ -56,7 +56,7 @@ def get_post(
 def delete_post(
     id: int,
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user),
+    current_user: int = Depends(oauth2.get_current_user),
 ):
     post = db.query(models.Post).filter(models.Post.id == id)
 
@@ -66,7 +66,7 @@ def delete_post(
             detail=f"post with id {id} not found",
         )
 
-    post.delete(synchronize_session=False)
+    post.delete(synchronize_session=False)  # type: ignore
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -81,7 +81,7 @@ def update_post(
     id: int,
     post: schemas.CreatePost,
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user),
+    current_user: int = Depends(oauth2.get_current_user),
 ):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post_to_update = post_query.first()
@@ -92,7 +92,7 @@ def update_post(
             detail=f"post with id {id} not found",
         )
 
-    post_query.update(post.dict(), synchronize_session=False)
+    post_query.update(post.dict(), synchronize_session=False)  # type: ignore
     db.commit()
 
     return post_query.first()

@@ -6,8 +6,9 @@ from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
+from sqlalchemy.orm import Session
 
-from . import schemas
+from . import database, models, schemas
 
 load_dotenv()
 
@@ -44,11 +45,16 @@ def verify_access_token(token: str, credentials_exception):
     return token_data
 
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    return verify_access_token(token, credentials_exception)
+    token = verify_access_token(token, credentials_exception)  # type: ignore
+    user = db.query(models.User).filter(models.User.id == token.id).first()  # type: ignore
+
+    return user
