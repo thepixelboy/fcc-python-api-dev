@@ -12,8 +12,16 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 @router.get("/", response_model=List[schemas.Post])
 def get_posts(
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user),
+    current_user: int = Depends(oauth2.get_current_user),
 ):
+    # Only Retrieve logged in user's posts
+    # posts = (
+    #     db.query(models.Post)
+    #     .filter(models.Post.owner_id == current_user.id)  # type: ignore
+    #     .all()
+    # )
+
+    # Retrieve all posts
     posts = db.query(models.Post).all()
     return posts
 
@@ -43,6 +51,7 @@ def get_post(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
 ):
+
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
     if not post:
@@ -50,6 +59,13 @@ def get_post(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"post with id {id} not found",
         )
+
+    # Retrieve an individual from the logged in user only
+    # if post.owner_id != current_user.id:  # type: ignore
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Not authorized to perform the requested action",
+    #     )
 
     return post
 
