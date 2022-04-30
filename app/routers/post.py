@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
@@ -13,6 +13,9 @@ router = APIRouter(prefix="/posts", tags=["Posts"])
 def get_posts(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user),
+    limit: int = 10,
+    skip: int = 0,
+    search: Optional[str] = "",
 ):
     # Only Retrieve logged in user's posts
     # posts = (
@@ -22,7 +25,13 @@ def get_posts(
     # )
 
     # Retrieve all posts
-    posts = db.query(models.Post).all()
+    posts = (
+        db.query(models.Post)
+        .filter(models.Post.title.contains(search))  # type: ignore
+        .limit(limit)
+        .offset(skip)
+        .all()
+    )
     return posts
 
 
