@@ -8,8 +8,15 @@ services:
       - 8000:8000
     volumes:
       - ./:/usr/src/app:ro
-    env_file:
-      - ./.env
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=fastapi
+      - DB_USER=postgres
+      - DB_PASS=password123
+      - SECRET_KEY=7c921dcec33a746b9672d56f3486a5a8ef0a68619c4e4749d1c23bd6fdb8d7ed
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   postgres:
